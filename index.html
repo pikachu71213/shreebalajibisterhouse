@@ -776,7 +776,7 @@ const PRODS=[
   {id:3,name:"Pillow",icon:"fas fa-cloud",cat:"bedding",price:10,desc:"Soft cotton pillows, ideal for all events, weddings and overnight arrangements."},
   {id:4,name:"Masand (Bolster)",icon:"fas fa-minus",cat:"bedding",price:10,desc:"Traditional Indian bolster cushions for floor seating and religious programs."},
   {id:5,name:"Dari (Floor Carpet)",icon:"fas fa-border-all",cat:"bedding",price:10,desc:"Woven cotton floor carpets for gatherings, religious programs and events."},
-  {id:6,name:"Tent Setup",icon:"fas fa-campground",cat:"tent",price:0-0,desc:"Complete tent setup with poles, fabric and installation. Multiple sizes available.",badge:"PREMIUM"},
+  {id:6,name:"Tent Setup",icon:"fas fa-campground",cat:"tent",price:0,desc:"Complete tent setup with poles, fabric and installation. Multiple sizes available.",badge:"PREMIUM"},
   {id:7,name:"Ceiling Fan",icon:"fas fa-fan",cat:"cooling",price:50,desc:"High-speed ceiling fans for tents and open areas, includes electrical setup."},
   {id:8,name:"Air Conditioner",icon:"fas fa-snowflake",cat:"cooling",price:500,desc:"1.5 and 2 ton AC units with fitting for indoor events and VIP areas.",badge:"PREMIUM"},
   {id:9,name:"Cooler",icon:"fas fa-wind",cat:"cooling",price:500,desc:"Desert coolers for large open events. High air throw capacity for outdoor use."},
@@ -792,7 +792,8 @@ const GALLERY=[
   {icon:"fas fa-users",title:"Village Panchayat Meet",desc:"Community seating and tent arrangement for gram sabha gathering in rural Bhiwani."},
   {icon:"fas fa-heartbeat",title:"Medical Camp Setup",desc:"Emergency bedding supply deployed for government-sponsored medical health camp."},
 ];
-let cart=[], pfilter='all';
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let pfilter='all';
 const PAGES=['home','story','products','booking','about','events','contact'];
 
 // NAV
@@ -870,7 +871,12 @@ function renderCart(){
   div.innerHTML=cart.map(item=>{const sub=item.price*item.qty;total+=sub;return`<div class="citem"><span><i class="${item.icon}" style="color:var(--gold);margin-right:7px;"></i>${item.name} &times;${item.qty}</span><span>Rs. ${sub}/day</span></div>`;}).join('');
   if(tot) tot.textContent=`Rs. ${total}/day`;
 }
-function clearCart(){cart=[];renderCart();toast('Cart cleared');}
+function clearCart(){
+  cart=[];
+  saveCart();
+  renderCart();
+  toast('Cart cleared');
+}
 
 // BOOKING
 function initBk(){
@@ -916,7 +922,9 @@ function renderGal(){
   const g=document.getElementById('ggrid');if(!g||g.children.length) return;
   g.innerHTML=GALLERY.map(x=>`<div class="gcard"><div class="gimg"><i class="${x.icon}"></i></div><div class="ginfo"><div class="gtitle">${x.title}</div><div class="gdesc">${x.desc}</div></div></div>`).join('');
 }
-
+ function saveCart(){
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
 // CONTACT
 function cfWA(){
   const n=document.getElementById('cfN')?.value;const ph=document.getElementById('cfP')?.value;
@@ -945,10 +953,28 @@ function toggleDark(){document.body.classList.toggle('dark');document.getElement
   function frame(){ctx.clearRect(0,0,W,H);pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x%W,p.y%H,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(201,168,76,${p.a})`;ctx.fill();p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;});requestAnimationFrame(frame);}
   frame();
 })();
+function addC(id){
+  const p=PRODS.find(x=>x.id===id);
+  const qEl=document.getElementById('q'+id);
+  const qty=qEl?parseInt(qEl.textContent):1;
 
+  const ex=cart.find(c=>c.id===id);
+
+  if(ex){
+    ex.qty+=qty;
+  }else{
+    cart.push({...p,qty});
+  }
+
+  saveCart();
+  renderCart();
+
+  toast(`${p.name} (x${qty}) added to cart`);
+}
 // INIT
 document.addEventListener('DOMContentLoaded',()=>{
   renderProds();
+  renderCart();
   const di=document.getElementById('bkDt');
   if(di){di.min=new Date().toISOString().split('T')[0];di.value=di.min;}
 });
